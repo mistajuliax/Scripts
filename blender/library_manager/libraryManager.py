@@ -169,7 +169,7 @@ class LBM_OP_LoadLibraries(bpy.types.Operator):
 class LBM_PN_LibraryManager(bpy.types.Panel):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'TOOLS'
-    bl_label = "Texture library manager"
+    bl_label = "Library manager"
     bl_category = 'Tools'
     #bl_context = 'sculptmode'
     bl_options = {'DEFAULT_CLOSED'}       
