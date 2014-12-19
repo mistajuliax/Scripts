@@ -1,6 +1,6 @@
 bl_info = {
     "name": "texture library manager",
-    "author": "Antonio Mendoza",
+    "author": "Antonio Mendoza Salado",
     "version": (0, 0, 1),
     "blender": (2, 72, 0),
     "location": "View3D > Panel Tools > Texture library manager panel (sculpt mode)",
