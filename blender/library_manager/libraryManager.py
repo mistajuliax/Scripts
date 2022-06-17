@@ -18,22 +18,21 @@ from bpy.props import StringProperty, BoolProperty, IntProperty, CollectionPrope
 from bpy.types import Menu, Panel
 
 
-def findImage (p_Name):
+def findImage(p_Name):
     
-    found = False
+    return any(img.name == p_Name for img in bpy.data.textures)
     
-    for img in bpy.data.textures:
-        if img.name == p_Name:
-            found = True
-            break 
-        
-    return found
-    
-def selectImages (p_fileList):
+def selectImages(p_fileList):
     
     file_list = p_fileList
-    img_list = [item for item in file_list if item[-3:] == 'png' or item[-3:] == 'jpg' or item[-4:] == 'jpeg' or item[-3:] == 'tga']    
-    return img_list
+    return [
+        item
+        for item in file_list
+        if item[-3:] == 'png'
+        or item[-3:] == 'jpg'
+        or item[-4:] == 'jpeg'
+        or item[-3:] == 'tga'
+    ]
 
 def image_batchImport(p_dir):
 
@@ -52,32 +51,30 @@ def image_batchImport(p_dir):
 def image_batchRemove(p_dir):
     file_list = sorted(os.listdir(p_dir))
     img_list = selectImages (file_list)
-    
+
     for img in img_list:
         dirImage = os.path.join(p_dir, img)
         tName = os.path.basename(os.path.splitext(img)[0])
-        
+
         for tex in bpy.data.textures:
-            if tex.name == tName:
-                if tex.type == 'IMAGE':
-                    image = tex.image
-                    tex.image.user_clear()
-                    bpy.data.images.remove(image)
-                    tex.user_clear()
-                    bpy.data.textures.remove(tex)
+            if tex.name == tName and tex.type == 'IMAGE':
+                image = tex.image
+                tex.image.user_clear()
+                bpy.data.images.remove(image)
+                tex.user_clear()
+                bpy.data.textures.remove(tex)
                 
 def findUserSysPath():
     
     userPath = ''
     
 def readLibraryDir():
-        dir = ''
-        fileDir = os.path.join(bpy.utils.resource_path('USER'), "scripts\\presets\\texture_library.conf")
-        if os.path.isfile(fileDir):
-            file = open(fileDir, 'r')
+    dir = ''
+    fileDir = os.path.join(bpy.utils.resource_path('USER'), "scripts\\presets\\texture_library.conf")
+    if os.path.isfile(fileDir):
+        with open(fileDir, 'r') as file:
             dir = file.read()
-            file.close()
-        return dir
+    return dir
                   
 class LBM_OP_LibraryUnload(bpy.types.Operator):
     bl_idname = "operator.library_unload"
@@ -111,51 +108,41 @@ class LBM_OP_LoadLibraries(bpy.types.Operator):
     libraries = []
     
     @classmethod
-    def loadLibraryDir(self):
+    def loadLibraryDir(cls):
         dir = ''
         fileDir = os.path.join(bpy.utils.resource_path('USER'), "scripts\\presets\\texture_library.conf")
         if os.path.isfile(fileDir):
-            file = open(fileDir, 'r')
-            dir = file.read()
-            file.close()
-            
-        self.dir_library = dir
-        self.findLibraries(self.dir_library)
+            with open(fileDir, 'r') as file:
+                dir = file.read()
+        cls.dir_library = dir
+        cls.findLibraries(cls.dir_library)
         
     def saveLibraryDir(self, p_Dir):
         fileDir = os.path.join(bpy.utils.resource_path('USER'), "scripts\\presets\\texture_library.conf")
-        file = open(fileDir, 'w+')
-        file.write(p_Dir)
-        file.close()
+        with open(fileDir, 'w+') as file:
+            file.write(p_Dir)
         
     def notInLibraries(self,p_item):
-        notFound = True
-        
-        for item in self.libraries:
-            if p_item == item:
-                notFound = False
-                break 
-            
-        return notFound
+        return all(p_item != item for item in self.libraries)
        
     @classmethod
-    def findLibraries(self, p_dir):
+    def findLibraries(cls, p_dir):
         dir = p_dir
-        
+
         if os.path.isdir(dir):
             file_list = sorted(os.listdir(dir))
             dir_list = []
-            del self.libraries[:]
-                  
+            del cls.libraries[:]
+
             for item in file_list:
                 lib_dir = os.path.join(dir,item)
                 if os.path.isdir(lib_dir):
                     dir_list.append(item)
-                
+
             for lib in dir_list:
                 lib_dir = os.path.join(dir,lib)
-                if os.path.isdir(lib_dir) and self.notInLibraries(self,lib):
-                    self.libraries.append(lib)
+                if os.path.isdir(lib_dir) and cls.notInLibraries(cls, lib):
+                    cls.libraries.append(lib)
      
     def execute(self, context):
         self.saveLibraryDir(context.scene.libmng_string_librarydir)
